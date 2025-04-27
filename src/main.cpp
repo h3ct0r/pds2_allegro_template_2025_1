@@ -11,59 +11,66 @@
 
 using namespace std;
 
-const float FPS = 30;
-const int SCREEN_W = 800;
-const int SCREEN_H = 600;
-const ALLEGRO_COLOR BACKGROUND_COLOR = al_map_rgb(0, 0, 0);
-const string FONT_FILEPATH = "assets/arial.ttf";
+// Constants for game configuration
+const float FPS = 30;                                        // Frames per second
+const int SCREEN_W = 800;                                    // Screen width in pixels
+const int SCREEN_H = 600;                                    // Screen height in pixels
+const ALLEGRO_COLOR BACKGROUND_COLOR = al_map_rgb(0, 0, 0);  // Background color (black)
+const string FONT_FILEPATH = "assets/arial.ttf";             // Path to the font file
 
 int main(int argc, char **argv) {
+    // Pointers for Allegro components
     ALLEGRO_DISPLAY *display = NULL;
     ALLEGRO_EVENT_QUEUE *event_queue = NULL;
     ALLEGRO_TIMER *timer = NULL;
 
-    // Initialization routines
+    // Initialize Allegro library
     if (!al_init()) {
         cout << "ERROR:" << "failed to initialize allegro" << endl;
         return -1;
     }
 
+    // Initialize Allegro primitives addon
     if (!al_init_primitives_addon()) {
         cout << "ERROR:" << "failed to initialize allegro primitives" << endl;
         return -1;
     }
 
+    // Initialize Allegro font and TTF addons
     if (!al_init_font_addon() || !al_init_ttf_addon()) {
         cout << "ERROR:" << "failed to initialize fonts" << endl;
         al_destroy_timer(timer);
         return -1;
     }
 
-    // load the font type arial.ttf with size of 32 pixels
+    // Load the font from the specified file
     ALLEGRO_FONT *font_arial = al_load_font(FONT_FILEPATH.c_str(), 32, 0);
     if (font_arial == nullptr) {
         cout << "ERROR:" << "failed to load font" << endl;
         return -1;
     }
 
-    // create event queue
+    // Create an event queue to handle events
     event_queue = al_create_event_queue();
     if (!event_queue) {
         cout << "ERROR:" << "failed to create event_queue" << endl;
         return -1;
     }
 
+    // Install keyboard input support
     if (!al_install_keyboard()) {
         cout << "ERROR:" << "failed to initialize keyboard" << endl;
         return -1;
     }
 
+    // Create the display window
     display = al_create_display(SCREEN_W, SCREEN_H);
     if (!display) {
         cout << "ERROR:" << "failed to create display" << endl;
         return -1;
     }
 
+    // Create a timer to control the game loop
     timer = al_create_timer(1.0 / FPS);
     if (!timer) {
         cout << "ERROR:" << "failed to initialize timer" << endl;
@@ -71,24 +78,26 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    // Register event sources for the event queue
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
 
-    // start timer: important to keep the game speed controlled
+    // Start the timer to control game speed
     al_start_timer(timer);
 
+    // Main game loop
     bool playing = true;
-    GameObject ball = GameObject(100, 10, SCREEN_W, SCREEN_H);
+    GameObject ball = GameObject(100, 10, SCREEN_W, SCREEN_H);  // Initialize the game object (ball)
     while (playing) {
         ALLEGRO_EVENT ev;
-        al_wait_for_event(event_queue, &ev);
+        al_wait_for_event(event_queue, &ev);  // Wait for an event to occur
 
         if (ev.type == ALLEGRO_EVENT_TIMER) {
-            // draw scenario
-            // al_clear_to_color(BACKGROUND_COLOR);
-            al_clear_to_color(al_map_rgba_f(1, 1, 1, 1));
+            // Timer event: update and redraw the game state
+            al_clear_to_color(al_map_rgba_f(1, 1, 1, 1));  // Clear the screen with white color
 
+            // Display elapsed time in seconds
             al_draw_textf(font_arial,
                           al_map_rgb(255, 0, 255),
                           SCREEN_W - 80,
@@ -97,6 +106,7 @@ int main(int argc, char **argv) {
                           "%d seconds",
                           (int)(al_get_timer_count(timer) / FPS));
 
+            // Display the number of hits
             al_draw_textf(font_arial,
                           al_map_rgb(255, 0, 255),
                           SCREEN_W - 80,
@@ -105,44 +115,44 @@ int main(int argc, char **argv) {
                           "%u hits",
                           ball.getCounter());
 
+            // Log elapsed time to the console every second
             if (al_get_timer_count(timer) % (int)FPS == 0) {
                 cout << al_get_timer_count(timer) / FPS << " second..." << endl;
             }
 
-            ball.updatePositionByGravity();
-            ball.draw();
+            ball.updatePositionByGravity();  // Update the ball's position
+            ball.draw();                     // Draw the ball
 
-            // draw the screen
-            al_flip_display();
+            al_flip_display();  // Update the display with the new frame
         }
-        // pressed keys event
+        // Handle key press events
         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
             switch (ev.keyboard.keycode) {
                 case ALLEGRO_KEY_SPACE:
                     cout << "space key was pressed" << endl;
-                    ball.doSomething();
+                    ball.doSomething();  // Perform an action when space is pressed
                     break;
 
                 case ALLEGRO_KEY_ESCAPE:
-                    playing = false;
+                    playing = false;  // Exit the game when escape is pressed
                     break;
             }
         }
-        // released keys event
+        // Handle key release events
         else if (ev.type == ALLEGRO_EVENT_KEY_UP) {
             switch (ev.keyboard.keycode) {
                 case ALLEGRO_KEY_SPACE:
                     cout << "space key was released" << endl;
                     break;
             }
-
         }
-        // if the event was to close the game window (using the x button)
+        // Handle window close event
         else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-            playing = false;
+            playing = false;  // Exit the game when the window is closed
         }
     }
 
+    // Cleanup resources
     al_destroy_timer(timer);
     al_destroy_display(display);
     al_destroy_event_queue(event_queue);
