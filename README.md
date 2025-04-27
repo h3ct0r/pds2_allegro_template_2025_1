@@ -18,6 +18,11 @@ For production release:
 make
 ```
 
+Then
+```sh
+./main
+```
+
 ## License
 
 Apache 2.0
